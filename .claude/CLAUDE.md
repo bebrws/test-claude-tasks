@@ -26,8 +26,8 @@ This repository contains an auto-updating static weather website for San Diego, 
 ## Git push instructions
 
 ```bash
-git config user.email "weather-bot@claude-tasks"
-git config user.name "Claude Weather Bot"
+git config user.email "bradebarrowsdev@gmail.com"
+git config user.name "Brad Barrows"
 git add -A
 git commit -m "chore: update weather $(date -u '+%Y-%m-%d %H:%M UTC')"
 git push origin HEAD
