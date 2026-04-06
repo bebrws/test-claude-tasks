@@ -1,6 +1,6 @@
 # Weather Site Builder
 
-This repository contains an auto-updating static weather website for San Diego, CA (zip code 92101).
+This repository contains an auto-updating static weather website for San Diego, CA (zip code 92101) and also uses the Github MCP to show a summary of the last commit, not under any Github organaization, but in my personal repositories (user https://github.com/bebrws/).
 
 ## What this agent does on each run
 
@@ -9,8 +9,9 @@ This repository contains an auto-updating static weather website for San Diego, 
    curl -s "https://wttr.in/92101?format=j1"
    ```
 2. Parse the JSON response to extract current conditions.
-3. Generate/overwrite `index.html` at the repo root with all weather data hardcoded into the HTML.
-4. Commit and push back to the repository.
+3. Use the Github MCP to get the last commit  summary to my personal repositories. The repository that the summary is generated from should not be this repository.
+4. Generate/overwrite `index.html` at the repo root with all weather data hardcoded into the HTML.
+5. Commit and push back to the repository.
 
 ## Site requirements
 
@@ -21,6 +22,7 @@ This repository contains an auto-updating static weather website for San Diego, 
   - Weather condition description with an appropriate emoji (☀️ 🌤 ⛅ 🌧 🌩 🌨 etc.)
   - Stat cards: Feels Like, Humidity, Wind speed/direction, UV Index
   - "Last updated" timestamp in UTC, hardcoded at build time
+  - Last Github commit summary card
 - Clean, modern design using system fonts
 
 ## Git push instructions

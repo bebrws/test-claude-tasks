@@ -9,6 +9,7 @@ concurrency:
 
 permissions:
   contents: write
+  packages: read
 
 jobs:
   build-with-claude:
@@ -44,18 +45,27 @@ jobs:
       - name: Run Claude Code
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
             echo "ANTHROPIC_API_KEY secret is required" >&2
             exit 1
           fi
 
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "GH_TOKEN secret is required for the GitHub MCP server" >&2
+            exit 1
+          fi
+
           "$CLAUDE_BIN" -p \
+            --mcp-config .mcp.json \
+            --strict-mcp-config \
             --permission-mode dontAsk \
             --allowedTools "Read" \
             --allowedTools "Edit" \
             --allowedTools "Write" \
             --allowedTools "WebFetch" \
+            --allowedTools "Bash(curl:*)" \
             --allowedTools "Bash(git config:*)" \
             --allowedTools "Bash(git add:*)" \
             --allowedTools "Bash(git commit:*)" \
@@ -63,6 +73,10 @@ jobs:
             --allowedTools "Bash(git pull:*)" \
             --allowedTools "Bash(git status:*)" \
             --allowedTools "Bash(date:*)" \
+            --allowedTools "mcp__github__get_me" \
+            --allowedTools "mcp__github__search_repositories" \
+            --allowedTools "mcp__github__list_commits" \
+            --allowedTools "mcp__github__get_commit" \
             'Execute .claude/CLAUDE.md'
 
       - name: Copy generated site to docs
