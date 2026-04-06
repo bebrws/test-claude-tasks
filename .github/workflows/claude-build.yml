@@ -23,41 +23,32 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Claude Code
+      - name: Validate Claude inputs
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL https://claude.ai/install.sh | bash
-
-          CLAUDE_BIN="$(command -v claude || true)"
-          if [ -z "$CLAUDE_BIN" ] && [ -x "$HOME/.local/bin/claude" ]; then
-            CLAUDE_BIN="$HOME/.local/bin/claude"
-          fi
-
-          if [ -z "$CLAUDE_BIN" ]; then
-            echo "Claude Code CLI not found after installation" >&2
+          if [ ! -f .mcp.json ]; then
+            echo ".mcp.json must exist in the repository root" >&2
             exit 1
           fi
 
-          echo "CLAUDE_BIN=$CLAUDE_BIN" >> "$GITHUB_ENV"
-          dirname "$CLAUDE_BIN" >> "$GITHUB_PATH"
-
-      - name: Run Claude Code
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
             echo "ANTHROPIC_API_KEY secret is required" >&2
             exit 1
           fi
 
-          if [ -z "${GH_TOKEN:-}" ]; then
+          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
             echo "GH_TOKEN secret is required for the GitHub MCP server" >&2
             exit 1
           fi
 
-          "$CLAUDE_BIN" -p \
+      - name: Run Claude Code with MCP
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Please read and execute the instructions in the .claude/CLAUDE.md file.
+          claude_args: |
             --mcp-config .mcp.json \
             --strict-mcp-config \
             --permission-mode dontAsk \
@@ -76,8 +67,9 @@ jobs:
             --allowedTools "mcp__github__get_me" \
             --allowedTools "mcp__github__search_repositories" \
             --allowedTools "mcp__github__list_commits" \
-            --allowedTools "mcp__github__get_commit" \
-            'Execute .claude/CLAUDE.md'
+            --allowedTools "mcp__github__get_commit"
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Copy generated site to docs
         run: |
