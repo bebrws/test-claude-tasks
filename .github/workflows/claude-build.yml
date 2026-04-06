@@ -25,6 +25,9 @@ jobs:
 
       - name: Validate Claude inputs
         shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           set -euo pipefail
           if [ ! -f .mcp.json ]; then
@@ -32,42 +35,31 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
             echo "ANTHROPIC_API_KEY secret is required" >&2
             exit 1
           fi
 
-          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
+          if [ -z "${GH_TOKEN:-}" ]; then
             echo "GH_TOKEN secret is required for the GitHub MCP server" >&2
             exit 1
           fi
 
       - name: Run Claude Code with MCP
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-base-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             Please read and execute the instructions in the .claude/CLAUDE.md file.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          mcp_config: .mcp.json
+          allowed_tools: >
+            Read,Edit,Write,WebFetch,Bash(curl:*),Bash(git config:*),Bash(git add:*),
+            Bash(git commit:*),Bash(git push:*),Bash(git pull:*),Bash(git status:*),
+            Bash(date:*),mcp__github_ro__get_me,mcp__github_ro__search_repositories,
+            mcp__github_ro__list_commits,mcp__github_ro__get_commit
           claude_args: |
-            --mcp-config .mcp.json \
-            --strict-mcp-config \
-            --permission-mode dontAsk \
-            --allowedTools "Read" \
-            --allowedTools "Edit" \
-            --allowedTools "Write" \
-            --allowedTools "WebFetch" \
-            --allowedTools "Bash(curl:*)" \
-            --allowedTools "Bash(git config:*)" \
-            --allowedTools "Bash(git add:*)" \
-            --allowedTools "Bash(git commit:*)" \
-            --allowedTools "Bash(git push:*)" \
-            --allowedTools "Bash(git pull:*)" \
-            --allowedTools "Bash(git status:*)" \
-            --allowedTools "Bash(date:*)" \
-            --allowedTools "mcp__github__get_me" \
-            --allowedTools "mcp__github__search_repositories" \
-            --allowedTools "mcp__github__list_commits" \
-            --allowedTools "mcp__github__get_commit"
+            --strict-mcp-config
+            --permission-mode dontAsk
         env:
           GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_TOKEN }}
 
