@@ -1,0 +1,74 @@
+name: Claude Build
+
+on:
+  push:
+
+concurrency:
+  group: claude-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-with-claude:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Claude Code
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://claude.ai/install.sh | bash
+
+          CLAUDE_BIN="$(command -v claude || true)"
+          if [ -z "$CLAUDE_BIN" ] && [ -x "$HOME/.local/bin/claude" ]; then
+            CLAUDE_BIN="$HOME/.local/bin/claude"
+          fi
+
+          if [ -z "$CLAUDE_BIN" ]; then
+            echo "Claude Code CLI not found after installation" >&2
+            exit 1
+          fi
+
+          echo "CLAUDE_BIN=$CLAUDE_BIN" >> "$GITHUB_ENV"
+          dirname "$CLAUDE_BIN" >> "$GITHUB_PATH"
+
+      - name: Run Claude Code
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "ANTHROPIC_API_KEY secret is required" >&2
+            exit 1
+          fi
+
+          "$CLAUDE_BIN" -p 'Execute .claude/CLAUDE.md'
+
+      - name: Copy generated site to docs
+        run: |
+          mkdir -p docs
+          cp index.html docs/index.html
+
+      - name: Commit docs output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+
+          if git diff --cached --quiet; then
+            echo "No docs changes to commit"
+            exit 0
+          fi
+
+          git commit -m "chore: sync docs output"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
