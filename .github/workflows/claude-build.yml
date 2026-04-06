@@ -50,7 +50,20 @@ jobs:
             exit 1
           fi
 
-          "$CLAUDE_BIN" -p --dangerously-skip-permissions 'Execute .claude/CLAUDE.md'
+          "$CLAUDE_BIN" -p \
+            --permission-mode dontAsk \
+            --allowedTools "Read" \
+            --allowedTools "Edit" \
+            --allowedTools "Write" \
+            --allowedTools "WebFetch" \
+            --allowedTools "Bash(git config:*)" \
+            --allowedTools "Bash(git add:*)" \
+            --allowedTools "Bash(git commit:*)" \
+            --allowedTools "Bash(git push:*)" \
+            --allowedTools "Bash(git pull:*)" \
+            --allowedTools "Bash(git status:*)" \
+            --allowedTools "Bash(date:*)" \
+            'Execute .claude/CLAUDE.md'
 
       - name: Copy generated site to docs
         run: |
