@@ -50,7 +50,7 @@ jobs:
             exit 1
           fi
 
-          "$CLAUDE_BIN" -p 'Execute .claude/CLAUDE.md'
+          "$CLAUDE_BIN" -p --dangerously-skip-permissions 'Execute .claude/CLAUDE.md'
 
       - name: Copy generated site to docs
         run: |
