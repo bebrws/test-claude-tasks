@@ -62,7 +62,7 @@ jobs:
             exit 1
           fi
 
-          "$CLAUDE_BIN" -p \
+          "$CLAUDE_BIN" -p "Execute the instructions in the .claude/CLAUDE.md file" \
             --mcp-config .mcp.json \
             --strict-mcp-config \
             --permission-mode dontAsk \
@@ -82,7 +82,6 @@ jobs:
             --allowedTools "mcp__github_ro__search_repositories" \
             --allowedTools "mcp__github_ro__list_commits" \
             --allowedTools "mcp__github_ro__get_commit" \
-            'Execute .claude/CLAUDE.md'
 
       - name: Copy generated site to docs
         run: |
